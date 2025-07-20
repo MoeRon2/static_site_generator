@@ -17,7 +17,7 @@ class TestTextNode(unittest.TestCase):
     
     def test_none(self):
         print("\n\n🧪 Testing none...")
-        node = TextNode("This is a text node", TextType.BOLD, "")
+        node = TextNode("This is a text node", TextType.BOLD)
 
         try:
             self.assertIsNone(node.url)
