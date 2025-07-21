@@ -91,16 +91,3 @@ def split_nodes_link(old_nodes):
     return new_nodes
 
 
-from textnode import TextNode, TextType
-from split_nodes_delimiter import split_nodes_delimiter, split_nodes_image, split_nodes_link
-
-def text_to_textnodes(text):
-    text_nodes = [TextNode(text, TextType.TEXT)]
-    split_nodes_delimiter_bold_result = split_nodes_delimiter(text_nodes, "**", TextType.BOLD)
-    split_nodes_delimiter_italic_result = split_nodes_delimiter(split_nodes_delimiter_bold_result, "_", TextType.ITALIC)
-    # split_nodes_delimiter_plain_result = split_nodes_delimiter(split_nodes_delimiter_italic_result , "*", TextType.TEXT)
-    split_nodes_delimiter_code_result = split_nodes_delimiter(split_nodes_delimiter_italic_result , '`', TextType.CODE)
-    image_split_result = split_nodes_image(split_nodes_delimiter_code_result)
-    link_split_result = (split_nodes_link(image_split_result))
-    
-    return link_split_result
