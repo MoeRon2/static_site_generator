@@ -1,98 +1,113 @@
 import unittest
+from htmlnode import LeafNode, ParentNode, HTMLNode
 
-from split_nodes_delimiter import text_to_textnodes
-from textnode import TextNode, TextType
 
-from convert_text_to_leaf import text_node_to_html_node
-
-class TestTextNode(unittest.TestCase):
-    def test_eq(self):
-        print("\n🧪 Testing equality...")
-        node = TextNode("This is a text node", TextType.BOLD)
-        node2 = TextNode("This is a text node", TextType.BOLD)
-        node3 = TextNode("This is an unequal test node", TextType.LINK)
-        self.assertEqual(node, node2)
-        self.assertNotEqual(node, node3)
-        print("✅ Equality test passed!")
-        
-    
-    def test_none(self):
-        print("\n\n🧪 Testing none...")
-        node = TextNode("This is a text node", TextType.BOLD)
-
-        try:
-            self.assertIsNone(node.url)
-            print("✅ None test passed!")
-        except AssertionError as e:
-            print("💀 FAILURE DETECTED! 💀")
-            print(f"🔥 Error: {e}")
-            
-        
-    
-    def test_not_eq(self):
-        print("\n\n🧪 Testing not equal...")
-        node = TextNode("This is a text node", TextType.BOLD)
-        node3 = TextNode("This is an unequal test node", TextType.LINK)
-        self.assertNotEqual(node.text_type, node3.text_type)
-        print("✅ Nonequality test passed!")
-
-  
-class TestTextNodeToHTMLNode(unittest.TestCase):
-    def test_text(self):
-        node = TextNode("This is a text node", TextType.TEXT)
-        html_node = text_node_to_html_node(node)
-        self.assertEqual(html_node.tag, None)
-        self.assertEqual(html_node.value, "This is a text node")
-
-    def test_image(self):
-        node = TextNode("This is an image", TextType.IMAGE, "https://www.boot.dev")
-        html_node = text_node_to_html_node(node)
-        self.assertEqual(html_node.tag, "img")
-        self.assertEqual(html_node.value, "")
+class TestHTMLNode(unittest.TestCase):
+    def test_to_html_props(self):
+        node = HTMLNode(
+            "div",
+            "Hello, world!",
+            None,
+            {"class": "greeting", "href": "https://boot.dev"},
+        )
         self.assertEqual(
-            html_node.props,
-            {"src": "https://www.boot.dev", "alt": "This is an image"},
+            node.props_to_html(),
+            ' class="greeting" href="https://boot.dev"',
         )
 
-    def test_bold(self):
-        node = TextNode("This is bold", TextType.BOLD)
-        html_node = text_node_to_html_node(node)
-        self.assertEqual(html_node.tag, "b")
-        self.assertEqual(html_node.value, "This is bold")
+    def test_values(self):
+        node = HTMLNode(
+            "div",
+            "I wish I could read",
+        )
+        self.assertEqual(
+            node.tag,
+            "div",
+        )
+        self.assertEqual(
+            node.value,
+            "I wish I could read",
+        )
+        self.assertEqual(
+            node.children,
+            None,
+        )
+        self.assertEqual(
+            node.props,
+            None,
+        )
+
+    def test_repr(self):
+        node = HTMLNode(
+            "p",
+            "What a strange world",
+            None,
+            {"class": "primary"},
+        )
+        self.assertEqual(
+            node.__repr__(),
+            "HTMLNode(p, What a strange world, children: None, {'class': 'primary'})",
+        )
+
+    def test_leaf_to_html_p(self):
+        node = LeafNode("p", "Hello, world!")
+        self.assertEqual(node.to_html(), "<p>Hello, world!</p>")
+
+    def test_leaf_to_html_a(self):
+        node = LeafNode("a", "Click me!", {"href": "https://www.google.com"})
+        self.assertEqual(
+            node.to_html(),
+            '<a href="https://www.google.com">Click me!</a>',
+        )
+
+    def test_leaf_to_html_no_tag(self):
+        node = LeafNode(None, "Hello, world!")
+        self.assertEqual(node.to_html(), "Hello, world!")
+
+    def test_to_html_with_children(self):
+        child_node = LeafNode("span", "child")
+        parent_node = ParentNode("div", [child_node])
+        self.assertEqual(parent_node.to_html(), "<div><span>child</span></div>")
+
+    def test_to_html_with_grandchildren(self):
+        grandchild_node = LeafNode("b", "grandchild")
+        child_node = ParentNode("span", [grandchild_node])
+        parent_node = ParentNode("div", [child_node])
+        self.assertEqual(
+            parent_node.to_html(),
+            "<div><span><b>grandchild</b></span></div>",
+        )
+
+    def test_to_html_many_children(self):
+        node = ParentNode(
+            "p",
+            [
+                LeafNode("b", "Bold text"),
+                LeafNode(None, "Normal text"),
+                LeafNode("i", "italic text"),
+                LeafNode(None, "Normal text"),
+            ],
+        )
+        self.assertEqual(
+            node.to_html(),
+            "<p><b>Bold text</b>Normal text<i>italic text</i>Normal text</p>",
+        )
+
+    def test_headings(self):
+        node = ParentNode(
+            "h2",
+            [
+                LeafNode("b", "Bold text"),
+                LeafNode(None, "Normal text"),
+                LeafNode("i", "italic text"),
+                LeafNode(None, "Normal text"),
+            ],
+        )
+        self.assertEqual(
+            node.to_html(),
+            "<h2><b>Bold text</b>Normal text<i>italic text</i>Normal text</h2>",
+        )
 
 
-    def test_text_to_textnodes(self):
-        text = "This is **text** with an _italic_ word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)"
-        result = text_to_textnodes(text)
-        
-        expected = [
-            TextNode("This is ", TextType.TEXT),
-            TextNode("text", TextType.BOLD),
-            TextNode(" with an ", TextType.TEXT),
-            TextNode("italic", TextType.ITALIC),
-            TextNode(" word and a ", TextType.TEXT),
-            TextNode("code block", TextType.CODE),
-            TextNode(" and an ", TextType.TEXT),
-            TextNode("obi wan image", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg"),
-            TextNode(" and a ", TextType.TEXT),
-            TextNode("link", TextType.LINK, "https://boot.dev"),
-        ]
-        
-        print("Result:")
-        for node in result:
-            print(f"  {node}")
-        
-        print("\nExpected:")
-        for node in expected:
-            print(f"  {node}")
-        
-        # Check if they match
-        if result == expected:
-            print("\n✅ Test passed!")
-        else:
-            print("\n❌ Test failed!")
-        
 if __name__ == "__main__":
     unittest.main()
-
-    
