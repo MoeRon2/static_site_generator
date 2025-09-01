@@ -1,24 +1,25 @@
+import os
+import shutil
 from block_markdown import markdown_to_blocks
+from generate_page import generate_pages_recursive
 from textnode import TextNode, TextType
+from copy_static import copy_files_recursive
+
+dir_path_static = "./static"
+dir_path_public = "./public"
+dir_path_content = "./content"
+template_path = "./template.html"
 
 
 def main():
-    node = TextNode("This is a text node", TextType.BOLD, "https://www.boot.dev")
-    print(node)
-#     blocks_test_string = """
-# This is **bolded** paragraph
+    print("Deleting public directory...")
+    if os.path.exists(dir_path_public):
+        shutil.rmtree(dir_path_public)
 
-# This is another paragraph with _italic_ text and `code` here
-# This is the same paragraph on a new line
+    print("Copying static files to public directory...")
+    copy_files_recursive(dir_path_static, dir_path_public)
 
-# - This is a list
-# - with items
-# """
-
-#     print(blocks_test_string)
-#     blocks = markdown_to_blocks(blocks_test_string)
-
-#     print(blocks)
-    
+    print("Generating content...")
+    generate_pages_recursive(dir_path_content, template_path, dir_path_public)
 
 main()
